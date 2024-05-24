@@ -1,0 +1,5 @@
+config.py
+**/**/__pycache__
+.idea
+start_server.sh
+.DS_Store
