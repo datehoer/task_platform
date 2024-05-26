@@ -12,3 +12,10 @@ MYSQL_CONFIG = {
     "charset": "utf8mb4",
     "database": "task_platform"
 }
+EMAIL_CONFIG = {
+    "smtp_server": "smtp.163.com",
+    "port": 465,
+    "username": "localhost@163.com",
+    "password": "localhost",
+    "sender_email": "localhost@163.com"
+}

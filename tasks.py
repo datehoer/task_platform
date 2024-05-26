@@ -1,7 +1,7 @@
 import json
 import time
 from rq import Queue
-from redis import Redis
+from MyRedis import RedisSingleton
 import importlib
 from rq.command import send_stop_job_command
 from config import REDIS_CONFIG, MYSQL_CONFIG
@@ -10,7 +10,7 @@ import os
 from useMySQL import MySQLDatabase
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 db = MySQLDatabase(MYSQL_CONFIG)
-redis_conn = Redis(host=REDIS_CONFIG['host'], password=REDIS_CONFIG['password'], db=REDIS_CONFIG['db'])
+redis_conn = RedisSingleton(host=REDIS_CONFIG['host'], password=REDIS_CONFIG['password'], db=REDIS_CONFIG['db']).get_connection()
 q = Queue(connection=redis_conn)
 select_sql = "select id, job_id, status, result, job_name, job_description, created_time, updated_time, script_name, script_data from job_status where is_deleted = 0 LIMIT %s OFFSET %s"
 select_job_info_sql = "select id, job_id, status, result, job_name, job_description, created_time, updated_time, script_name, script_data from job_status where is_deleted = 0 and id=%s"
@@ -31,6 +31,7 @@ update_sql = "update job_status set 1=1, updated_time=%s where id = %s"
 #   `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
 #   PRIMARY KEY (`id`) USING BTREE
 # ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
 
 def fetch_url(script_name, data, last_rowid):
     module = importlib.import_module(f'scripts.{script_name}')

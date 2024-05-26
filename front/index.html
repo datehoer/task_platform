@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e1e, #222222);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+        h2 {
+            color: #03a9f4;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(3, 169, 244, 0.8);
+        }
+        form {
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        label, input {
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        input[type="text"], input[type="password"] {
+            background-color: #333333;
+            border: 1px solid #555555;
+            padding: 12px;
+            border-radius: 8px;
+            color: #ffffff;
+            box-sizing: border-box;
+        }
+        input[type="submit"], input[type="button"] {
+            background-color: #03a9f4;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s, transform 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input[type="submit"]:hover, input[type="button"]:hover {
+            background-color: #0288d1;
+            transform: scale(1.05);
+        }
+        #result {
+            margin-top: 20px;
+            color: #03a9f4;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>注册页面</h2>
+        <form id="registerForm">
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">密码:</label>
+            <input type="password" id="password" name="password" required>
+            <label for="password2">确认密码:</label>
+            <input type="password" id="password2" name="password2" required>
+            <label for="email">邮箱:</label>
+            <input type="text" id="email" name="email" required>
+            <label for="auth_code">验证码:</label>
+            <input type="text" id="auth_code" name="auth_code" required>
+            <input type="button" value="获取验证码" id="getAuthCode">
+            <input type="submit" value="注册">
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('getAuthCode').addEventListener('click', function() {
+            const email = document.getElementById('email').value;
+            if (email) {
+                fetch("http://localhost:8000/sendAuthCode?email=" + email)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 0) {
+                        alert('验证码已发送到 ' + email)
+                    } else {
+                        alert('发送验证码失败: ' + data.message)
+                    }
+                })
+                document.getElementById('result').innerText = '验证码已发送到 ' + email;
+            } else {
+                document.getElementById('result').innerText = '请输入邮箱地址';
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const password2 = document.getElementById('password2').value;
+            const email = document.getElementById('email').value;
+            const auth_code = document.getElementById('auth_code').value;
+
+            if (password !== password2) {
+                document.getElementById('result').innerText = '两次输入的密码不一致';
+                return;
+            }
+
+            if (username && password && email && auth_code) {
+                fetch("http://localhost:8000/register", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, email, auth_code }),
+                    credentials: 'include'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 0) {
+                            document.getElementById('result').innerText = '注册成功！';
+                        } else {
+                            document.getElementById('result').innerText = '注册失败: ' + data.message;
+                        }
+                    })
+            } else {
+                document.getElementById('result').innerText = '请填写所有必填项';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e1e, #222222);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+        h2 {
+            color: #03a9f4;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(3, 169, 244, 0.8);
+        }
+        form {
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        label, input {
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        input[type="text"], input[type="password"] {
+            background-color: #333333;
+            border: 1px solid #555555;
+            padding: 12px;
+            border-radius: 8px;
+            color: #ffffff;
+            box-sizing: border-box;
+        }
+        input[type="submit"], input[type="button"] {
+            background-color: #03a9f4;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s, transform 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input[type="submit"]:hover, input[type="button"]:hover {
+            background-color: #0288d1;
+            transform: scale(1.05);
+        }
+        #result {
+            margin-top: 20px;
+            color: #03a9f4;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>登录页面</h2>
+        <form id="loginForm">
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">密码:</label>
+            <input type="password" id="password" name="password" required>
+            <input type="submit" value="登录">
+        </form>
+        <div id="result"></div>
+        <input type="button" value="我" id="me">
+    </div>
+
+    <script>
+        document.getElementById('me').addEventListener('click', function() {
+            fetch("http://localhost:8000/users/me", {
+                method: 'GET',
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 0) {
+                        document.getElementById('result').innerText = '当前用户: ' + data.data.user.username;
+                    } else {
+                        document.getElementById('result').innerText = '获取用户信息失败: ' + data.message;
+                    }
+                })
+        });
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username && password) {
+                fetch("http://localhost:8000/login", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 0) {
+                            document.getElementById('result').innerText = '登录成功！';
+                        } else {
+                            document.getElementById('result').innerText = '登录失败: ' + data.message;
+                        }
+                    })
+            } else {
+                document.getElementById('result').innerText = '请填写所有必填项';
+            }
+        });
+    </script>
+</body>
+</html>

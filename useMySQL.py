@@ -29,7 +29,17 @@ class DatabaseOperationFailed(CustomDatabaseException):
         super().__init__(message, sql=sql, params=params)
 
 
-class MySQLDatabase:
+class SingletonMeta(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            instance = super().__call__(*args, **kwargs)
+            cls._instances[cls] = instance
+        return cls._instances[cls]
+
+
+class MySQLDatabase(metaclass=SingletonMeta):
     def __init__(self, config_mysql, pool_size=10, connect_timeout=5, retry_backoff_base=1.5):
         self.host = config_mysql['host']
         self.port = config_mysql['port']

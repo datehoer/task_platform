@@ -1,28 +1,26 @@
-from fastapi import FastAPI, Depends
+import random
+from fastapi import FastAPI, Depends, Response
 from tasks import enqueue_task, stop_task, get_all_jobs, get_task_status
-from redis import Redis
 import os
 import uvicorn
-from config import REDIS_CONFIG
-from pydantic import BaseModel
-from typing import Optional, Any
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from MySecurity import authenticate_user, create_access_token
+from models import StandardResponse, UserRegisterForm, TaskItem, LoginForm, User
+from MySecurity import authenticate_user, create_access_token, register_user, get_current_user, check_user_permission
+from MyEmail import send_email
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
-redis_conn = Redis(host=REDIS_CONFIG['host'], password=REDIS_CONFIG['password'], db=REDIS_CONFIG['db'])
-
-
-class TaskItem(BaseModel):
-    script_name: str
-    data: Optional[dict] = {}
-    job_name: str
-    job_description: Optional[str] = ""
-
-
-class StandardResponse(BaseModel):
-    code: int
-    message: str
-    data: Optional[Any] = None
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://localhost:63342",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def is_length_exceed_len(input_string, charset='utf8mb4', length=255):
@@ -88,13 +86,48 @@ async def list_jobs(page: int, size: int):
     })
 
 
+@app.get("/sendAuthCode")
+async def send_auth_code(email: str):
+    codes = "0123456789QWERTYUIOPASDFGHJKLZXCVBNM"
+    auth_code = random.sample(codes, 6)
+    result = send_email(email, "邮箱验证码", "".join(auth_code))
+    if result:
+        return StandardResponse(code=0, message="success", data={})
+    return StandardResponse(code=1, message="failed", data={})
+
+
 @app.post("/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
+async def login(login_form: LoginForm, response: Response):
+    user = authenticate_user(login_form.username, login_form.password)
     if not user:
         return StandardResponse(code=1, message="error", data={})
-    access_token = create_access_token(data={"sub": user.username})
+    access_token = create_access_token(data={"sub": login_form.username})
+    response.set_cookie(key="bearer", value=f'{access_token}', httponly=True, max_age=60*60*24*7, expires=60*60*24*7)
     return StandardResponse(code=0, message="success", data={"access_token": access_token, "token_type": "bearer"})
+
+
+@app.post("/register")
+async def register(user_form: UserRegisterForm):
+    user = register_user(user_form.username, user_form.password, user_form.email, user_form.auth_code)
+    if not user:
+        return StandardResponse(code=1, message="error", data={})
+    else:
+        return StandardResponse(code=0, message="success", data={})
+
+
+@app.get("/users/me")
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    if not current_user:
+        return StandardResponse(code=1, message="error", data={})
+    user_dict = {
+        "id": current_user[0],
+        "username": current_user[1],
+        "email": current_user[2],
+        "avatar_url": current_user[3]
+    }
+    if check_user_permission(current_user[0], "user_me"):
+        return StandardResponse(code=0, message="success", data={"user": user_dict})
+    return StandardResponse(code=1, message="error", data={"user": {}})
 
 
 @app.get("/")

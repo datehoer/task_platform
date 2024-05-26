@@ -3,3 +3,4 @@ config.py
 .idea
 start_server.sh
 .DS_Store
+test.py
