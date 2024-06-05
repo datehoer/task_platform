@@ -1,13 +1,13 @@
 import json
 import time
 from rq import Queue
-from MyRedis import RedisSingleton
+from common.MyRedis import RedisSingleton
 import importlib
 from rq.command import send_stop_job_command
 from config import REDIS_CONFIG, MYSQL_CONFIG
 import sys
 import os
-from useMySQL import MySQLDatabase
+from common.useMySQL import MySQLDatabase
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 db = MySQLDatabase(MYSQL_CONFIG)
 redis_conn = RedisSingleton(host=REDIS_CONFIG['host'], password=REDIS_CONFIG['password'], db=REDIS_CONFIG['db']).get_connection()

@@ -5,7 +5,6 @@ from queue import Queue, Full
 logger = logging.getLogger(__name__)
 
 
-# 自定义异常基类
 class CustomDatabaseException(Exception):
     def __init__(self, message, **kwargs):
         self.message = message
@@ -17,13 +16,11 @@ class CustomDatabaseException(Exception):
         return f"{self.message}. Extra info: {extra_info_str}"
 
 
-# 连接错误
 class DatabaseConnectionError(CustomDatabaseException):
     def __init__(self, host, port, message="Unable to establish a database connection"):
         super().__init__(message, host=host, port=port)
 
 
-# 操作失败
 class DatabaseOperationFailed(CustomDatabaseException):
     def __init__(self, sql, params, message="Database operation failed"):
         super().__init__(message, sql=sql, params=params)

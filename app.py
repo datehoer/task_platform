@@ -4,8 +4,8 @@ from tasks import enqueue_task, stop_task, get_all_jobs, get_task_status
 import os
 import uvicorn
 from models import StandardResponse, UserRegisterForm, TaskItem, LoginForm, User
-from MySecurity import authenticate_user, create_access_token, register_user, get_current_user, check_user_permission
-from MyEmail import send_email
+from common.MySecurity import authenticate_user, create_access_token, register_user, get_current_user, check_user_permission
+from common.MyEmail import send_email
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
